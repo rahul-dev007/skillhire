@@ -1,5 +1,6 @@
 
-import '../app/globals.css';
+import './globals.css';
+
 
 import { AuthProvider } from '../context/AuthContext'
 

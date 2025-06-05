@@ -17,6 +17,9 @@ export default function Home() {
       <h1 className="text-3xl font-bold mb-4 text-blue-600">SkillHire - Freelance Marketplace</h1>
       <p className="text-lg text-gray-700">Backend says: {message || 'Loading...'}</p>
      <h1 className="text-4xl font-bold text-green-500">✅ Tailwind is working!</h1>
+     <h1 className="text-3xl font-bold text-blue-600">Hello Tailwind</h1>
+     <h1 className="text-3xl font-bold text-center text-blue-500">Welcome to SkillHire</h1>
+
     </main>
   );
 }

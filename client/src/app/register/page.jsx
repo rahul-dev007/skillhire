@@ -1,54 +1,93 @@
-'use client'
-import Link from 'next/link';
+'use client';
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
 
 export default function RegisterPage() {
+  const { register, setToken, setUser } = useAuth();
+  const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({
-    username: '',
+  const [formData, setFormData] = useState({
+    name: '',
     email: '',
-    password: ''
+    password: '',
   });
+  const [image, setImage] = useState(null);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
+
+    const form = new FormData();
+    form.append('username', formData.name);
+    form.append('email', formData.email);
+    form.append('password', formData.password);
+    form.append('role', 'user');
+
+    if (image) {
+      form.append('image', image); // ✅ Image upload optional
+    }
+
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+      const res = await axios.post('http://localhost:5000/api/auth/register', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const data = await res.json();
-      console.log(data);
+
+      if (res.data.token && res.data.user) {
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        setToken(res.data.token);
+        setUser(res.data.user);
+        router.push('/dashboard');
+      }
     } catch (err) {
-      console.error('Register failed:', err);
+      console.error("Registration failed:", err);
+      alert("Registration failed. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-500">
-      <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/20">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">Create an Account</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-gray-800">
+      <div className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-lg max-w-md w-full">
+        <h2 className="text-2xl font-semibold text-white mb-6 text-center">Create Account</h2>
+
+        {/* 👇 Profile Image Preview or Placeholder */}
+        <div className="flex justify-center mb-4">
+          <img
+            src={image ? URL.createObjectURL(image) : '/default-profile.png'}
+            alt="Profile"
+            className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-md"
+          />
+        </div>
+
+        <form onSubmit={handleRegister} className="space-y-4">
           <input
             type="text"
-            name="username"
-            placeholder="Username"
+            name="name"
+            placeholder="Full Name"
+            className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 focus:outline-none"
+            value={formData.name}
             onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white/40"
             required
           />
           <input
             type="email"
             name="email"
-            placeholder="Email"
+            placeholder="Email Address"
+            className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 focus:outline-none"
+            value={formData.email}
             onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white/40"
             required
           />
           <div className="relative">
@@ -56,28 +95,38 @@ export default function RegisterPage() {
               type={showPassword ? 'text' : 'password'}
               name="password"
               placeholder="Password"
+              className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 focus:outline-none"
+              value={formData.password}
               onChange={handleChange}
-              className="w-full p-3 pr-10 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white/40"
               required
             />
-            <button
-              type="button"
-              className="absolute top-3 right-3 text-white"
+            <div
+              className="absolute right-3 top-2.5 text-white cursor-pointer"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
+            </div>
           </div>
+
+          {/* 👇 Image Input Field */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="text-white"
+          />
+
           <button
             type="submit"
-            className="w-full bg-white text-purple-700 font-semibold py-2 rounded-lg hover:bg-purple-100 transition"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold"
           >
             Register
           </button>
         </form>
-        <p className="text-white mt-4 text-center">
+
+        <p className="text-center text-gray-300 mt-4 text-sm">
           Already have an account?{' '}
-          <Link href="/login" className="underline text-purple-100 hover:text-white">
+          <Link href="/login" className="text-blue-400 hover:underline">
             Login here
           </Link>
         </p>
