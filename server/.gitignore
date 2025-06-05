@@ -1,0 +1,24 @@
+# Node.js
+node_modules/
+.env
+npm-debug.log
+yarn-error.log
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Build files (for frontend if any)
+build/
+dist/
+
+# Cloudinary default image if not needed
+/client/public/default-profile.png
