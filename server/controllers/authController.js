@@ -4,12 +4,13 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
+// 🟩 Register Controller
 exports.registerUser = async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
 
     // Optional image from Cloudinary via multer
-    const image = req.file?.path || ''; // If no image uploaded, it will be an empty string
+    const image = req.file?.path || 'https://res.cloudinary.com/dwgnuaytl/image/upload/v1234567890/default-profile.png';
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -25,13 +26,13 @@ exports.registerUser = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      role: role || 'user', // fallback to 'user' if not provided
-      image, // image URL from Cloudinary
+      role: role || 'user',
+      image, // Profile image
     });
 
     await newUser.save();
 
-    // Create JWT token (optional but useful)
+    // Create JWT token
     const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, {
       expiresIn: '7d',
     });
@@ -42,7 +43,7 @@ exports.registerUser = async (req, res) => {
     res.status(201).json({
       message: 'User registered successfully',
       user: userData,
-      token, // send token if needed
+      token,
     });
   } catch (err) {
     console.error('Register error:', err.message);
@@ -50,7 +51,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-
+// 🟨 Login Controller
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -63,7 +64,16 @@ exports.loginUser = async (req, res) => {
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
 
-    res.json({ token, user: { id: user._id, username: user.username, email: user.email, role: user.role } });
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

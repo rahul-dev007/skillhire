@@ -1,15 +1,6 @@
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../utils/cloudinary');
+const { storage } = require('../utils/cloudinary'); // Cloudinary storage config import
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'profile_images',
-    allowed_formats: ['jpg', 'png', 'jpeg'],
-  },
-});
+const upload = multer({ storage }); // Multer instance with Cloudinary storage
 
-const upload = multer({ storage });
-
-module.exports = upload;
+module.exports = upload; // Export middleware for use in routes
