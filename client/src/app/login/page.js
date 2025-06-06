@@ -13,14 +13,23 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
       await login(email, password);
       router.push('/dashboard');
-    } catch (error) {
-      alert('Invalid email or password');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Invalid email or password';
+      console.error('❌ Login error:', msg);
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,6 +37,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6]">
       <div className="bg-white bg-opacity-10 backdrop-blur-md p-8 rounded-2xl shadow-lg w-full max-w-sm text-white">
         <h2 className="text-2xl font-bold mb-6 text-center">Login to Your Account</h2>
+
+        {error && (
+          <p className="text-red-400 text-center text-sm mb-4">{error}</p>
+        )}
+
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -37,6 +51,7 @@ export default function LoginPage() {
             className="w-full mb-4 px-4 py-2 rounded bg-white/20 text-white placeholder-white/80 focus:outline-none focus:ring-2 focus:ring-white"
             required
           />
+
           <div className="relative mb-4">
             <input
               type={showPassword ? 'text' : 'password'}
@@ -53,13 +68,16 @@ export default function LoginPage() {
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </span>
           </div>
+
           <button
             type="submit"
+            disabled={loading}
             className="w-full bg-white text-blue-600 font-semibold py-2 rounded hover:bg-gray-200 transition"
           >
-            Login
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
         <div className="mt-4 flex justify-between text-sm">
           <Link href="/forgot-password" className="hover:underline">
             Forgot password?

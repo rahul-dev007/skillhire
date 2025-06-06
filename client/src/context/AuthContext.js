@@ -30,26 +30,25 @@ export const AuthProvider = ({ children }) => {
     setUser(res.data.user);
   };
 
-const register = async (name, email, password, profileImage) => {
-  const res = await axios.post('http://localhost:5000/api/auth/register', {
-    username: name,
-    email,
-    password,
-    role: 'user',
-    profileImage, // ✅ নতুন যোগ করা image URL
-  });
+  const register = async (name, email, password, image) => {
+    const res = await axios.post('http://localhost:5000/api/auth/register', {
+      username: name,
+      email,
+      password,
+      role: 'user',
+      image,
+    });
 
-  if (res.data.token && res.data.user) {
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('user', JSON.stringify(res.data.user));
+    if (res.data.token && res.data.user) {
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
 
-    setToken(res.data.token);
-    setUser(res.data.user);
-  } else {
-    console.warn("Registration successful but no token/user returned");
-  }
-};
-
+      setToken(res.data.token);
+      setUser(res.data.user);
+    } else {
+      console.warn("Registration successful but no token/user returned");
+    }
+  };
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -59,7 +58,17 @@ const register = async (name, email, password, profileImage) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        setUser,    // ✅ এখন context এ আছে
+        setToken,   // ✅ এখন context এ আছে
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

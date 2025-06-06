@@ -7,16 +7,18 @@ import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 
 export default function RegisterPage() {
-  const { register, setToken, setUser } = useAuth();
+  const { setToken, setUser } = useAuth();
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
   });
   const [image, setImage] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,32 +30,35 @@ export default function RegisterPage() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
     const form = new FormData();
-    form.append('username', formData.name);
+    form.append('username', formData.username);
     form.append('email', formData.email);
     form.append('password', formData.password);
     form.append('role', 'user');
-
-    if (image) {
-      form.append('image', image); // ✅ Image upload optional
-    }
+    if (image) form.append('image', image);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await axios.post('http://localhost:5000/api/auth/register', form);
 
-      if (res.data.token && res.data.user) {
+      if (res.status === 201 && res.data.token && res.data.user) {
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data.user));
         setToken(res.data.token);
         setUser(res.data.user);
-        router.push('/dashboard');
+        router.push('/login');
+      } else {
+        console.warn('⚠️ Unexpected response:', res.data);
+        setError('Registration failed. Please try again.');
       }
     } catch (err) {
-      console.error("Registration failed:", err);
-      alert("Registration failed. Please try again.");
+      const serverMessage = err.response?.data?.message;
+      console.error("❌ Registration error:", serverMessage || err.message);
+      setError(serverMessage || 'Registration failed. Try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,22 +67,27 @@ export default function RegisterPage() {
       <div className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-lg max-w-md w-full">
         <h2 className="text-2xl font-semibold text-white mb-6 text-center">Create Account</h2>
 
-        {/* 👇 Profile Image Preview or Placeholder */}
+        {error && <p className="text-red-400 text-center mb-4 text-sm">{error}</p>}
+
         <div className="flex justify-center mb-4">
           <img
             src={image ? URL.createObjectURL(image) : '/default-profile.png'}
             alt="Profile"
             className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-md"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/fallback.png';
+            }}
           />
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
           <input
             type="text"
-            name="name"
+            name="username"
             placeholder="Full Name"
             className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 focus:outline-none"
-            value={formData.name}
+            value={formData.username}
             onChange={handleChange}
             required
           />
@@ -108,7 +118,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* 👇 Image Input Field */}
           <input
             type="file"
             accept="image/*"
@@ -119,8 +128,9 @@ export default function RegisterPage() {
           <button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold"
+            disabled={loading}
           >
-            Register
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
 
